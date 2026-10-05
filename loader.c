@@ -16,6 +16,7 @@ static int g_genuine_ok = 0;
 static Mod *g_mods = NULL;
 static int g_mod_count = 0;
 static int g_console_mods = 0;
+static const wchar_t *MOD_FOLDERS[] = { L"~mods", L"mods" };
 
 int exe_dir(wchar_t *buf, size_t cch) {
   DWORD n = GetModuleFileNameW(NULL, buf, (DWORD)cch);
@@ -24,9 +25,9 @@ int exe_dir(wchar_t *buf, size_t cch) {
   return 1;
 }
 
-static int mods_dir(const wchar_t *exedir, wchar_t *out, DWORD cch) {
+static int mods_dir(const wchar_t *exedir, const wchar_t *folder, wchar_t *out, DWORD cch) {
   wchar_t rel[MAX_PATH];
-  if (_snwprintf_s(rel, MAX_PATH, _TRUNCATE, L"%ls..\\..\\Content\\Paks\\~mods", exedir) < 0) return 0;
+  if (_snwprintf_s(rel, MAX_PATH, _TRUNCATE, L"%ls..\\..\\Content\\Paks\\%ls", exedir, folder) < 0) return 0;
   DWORD n = GetFullPathNameW(rel, cch, out, NULL);
   return n != 0 && n < cch;
 }
@@ -34,6 +35,13 @@ static int mods_dir(const wchar_t *exedir, wchar_t *out, DWORD cch) {
 static int file_exists(const wchar_t *path) {
   DWORD attr = GetFileAttributesW(path);
   return attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+static int known_mod(const wchar_t *name) {
+  for (int i = 0; i < g_mod_count; i++) {
+    if (CompareStringOrdinal(g_mods[i].name, -1, name, -1, TRUE) == CSTR_EQUAL) return 1;
+  }
+  return 0;
 }
 
 static void scan_mods(const wchar_t *mods) {
@@ -51,7 +59,7 @@ static void scan_mods(const wchar_t *mods) {
     wchar_t dll[MAX_PATH];
     wchar_t marker[MAX_PATH];
     if (_snwprintf_s(dll, MAX_PATH, _TRUNCATE, L"%ls\\%ls\\%ls.dll", mods, fd.cFileName, fd.cFileName) < 0 || _snwprintf_s(marker, MAX_PATH, _TRUNCATE, L"%ls\\%ls\\console", mods, fd.cFileName) < 0) continue;
-    if (!file_exists(dll)) continue;
+    if (!file_exists(dll) || known_mod(fd.cFileName)) continue;
 
     g_mods = realloc(g_mods, (g_mod_count + 1) * sizeof(Mod));
     Mod *m = &g_mods[g_mod_count++];
@@ -107,8 +115,10 @@ static DWORD WINAPI startup_worker(LPVOID param) {
   (void)param;
   wchar_t dir[MAX_PATH];
   wchar_t mods[MAX_PATH];
-  if (!exe_dir(dir, MAX_PATH) || !mods_dir(dir, mods, MAX_PATH)) return 0;
-  scan_mods(mods);
+  if (!exe_dir(dir, MAX_PATH)) return 0;
+  for (int i = 0; i < ARRAYSIZE(MOD_FOLDERS); i++) {
+    if (mods_dir(dir, MOD_FOLDERS[i], mods, MAX_PATH)) scan_mods(mods);
+  }
   if (g_console_mods > 0) open_console();
   if (!g_genuine_ok) nl_log("genuine System32 winmm FAILED to load");
   bridge_register_builtins();

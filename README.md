@@ -15,6 +15,6 @@ Run `build.bat`. It needs Visual Studio 2022, or the Visual Studio 2022 Build To
 ## How it works
 
 - The game loads `winmm.dll` from its own folder, so Native Loader takes its place and forwards all 180 WinMM functions to the real one in `System32`.
-- For every folder in `~mods`, it loads `<Mod>\<Mod>.dll` if there is one.
+- For every folder in `~mods`, and in `mods` for anyone who named it without the `~`, it loads `<Mod>\<Mod>.dll` if there is one.
 - The debug console is its own window, opened when a mod folder has a `console` file in it.
 - For the Blueprint bridge, it finds the engine's object list, name table and bytecode handlers in memory by their shape, then replaces the native function of the stock **Get Console Variable String Value** node. Calls whose name starts `NL|` go to the registered DLL function, and all other calls reach the original.
