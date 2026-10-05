@@ -6,7 +6,7 @@ Downloads, and the Native Mod Template for making mods, are on [Nexus Mods](http
 
 ## Installing
 
-Put `winmm.dll` in `Dungeons\Binaries\Win64`, next to `Dungeons-Win64-Shipping.exe`. Mods go in `Dungeons\Content\Paks\~mods`.
+Put `winmm.dll` next to the game's exe, in `Dungeons\Binaries\Win64` on Steam or `Dungeons\Binaries\WinGDK` on the Minecraft Launcher. Mods go in `Dungeons\Content\Paks\~mods`.
 
 ## Building
 
