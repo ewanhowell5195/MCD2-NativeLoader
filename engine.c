@@ -17,6 +17,7 @@
 #define CHUNK_ELEMS 65536
 
 #define GNATIVES_COUNT 255
+#define GNATIVES_MIN_CHANGES 40
 
 void **g_gnatives;
 
@@ -147,12 +148,13 @@ static int is_none_block(uint64_t p) {
 static int is_gnatives(uint64_t p) {
   if (!readable((void *)p, GNATIVES_COUNT * 8)) return 0;
   uint64_t *v = (uint64_t *)p;
-  int adj = 0;
+  int adj = 0, changes = 0;
   for (int i = 0; i < GNATIVES_COUNT; i++) {
     if (!in_text(v[i])) return 0;
     if (i > 0 && v[i] == v[i - 1]) adj++;
+    else if (i > 0) changes++;
   }
-  return adj >= 10;
+  return adj >= 10 && changes >= GNATIVES_MIN_CHANGES;
 }
 
 static uint64_t obj_at(int32_t i) {
