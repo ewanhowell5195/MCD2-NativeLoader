@@ -126,6 +126,7 @@ static DWORD WINAPI startup_worker(LPVOID param) {
   (void)param;
   wchar_t dir[MAX_PATH];
   wchar_t mods[MAX_PATH];
+  exit_fix_install();
   if (!exe_dir(dir, MAX_PATH)) return 0;
   for (int i = 0; i < ARRAYSIZE(MOD_FOLDERS); i++) {
     if (mods_dir(dir, MOD_FOLDERS[i], mods, MAX_PATH)) scan_mods(mods);
